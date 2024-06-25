@@ -1,7 +1,7 @@
 import os
 import secrets
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request, abort
+from flask import render_template, url_for, flash, redirect, request, abort, session
 from adriana_assistant import app, db, bcrypt, mail
 from adriana_assistant.forms import (RegistrationForm, LoginForm, UpdateAccountForm, UpdateProfilePictureForm,
                              PostForm, RequestResetForm, ResetPasswordForm)
@@ -9,6 +9,7 @@ from adriana_assistant.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
 from .module_logic import process_module, load_preexisting_modules, get_module_details
+
 
 
 @app.route("/")
@@ -35,7 +36,7 @@ def register():
         user = User(username=form.username.data, email=form.email.data, password=hashed_password)
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
+        flash('Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
@@ -52,7 +53,7 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('home'))
         else:
-            flash('Login Unsuccessful. Please check email and password', 'danger')
+            flash('Inicio de sesión sin éxito. Por favor revisa tu email y contraseña.', 'danger')
     return render_template('login.html', title='Login', form=form)
 
 
@@ -140,7 +141,7 @@ def update_post(post_id):
         post.title = form.title.data
         post.content = form.content.data
         db.session.commit()
-        flash('Your post has been updated!', 'success')
+        flash('Tu publicación ha sido actualizada.', 'success')
         return redirect(url_for('post', post_id=post.id))
     elif request.method == 'GET':
         form.title.data = post.title
@@ -157,7 +158,7 @@ def delete_post(post_id):
         abort(403)
     db.session.delete(post)
     db.session.commit()
-    flash('Your post has been deleted!', 'success')
+    flash('Tu publicación ha sido eliminada.', 'success')
     return redirect(url_for('home'))
 
 
@@ -217,11 +218,13 @@ def reset_token(token):
 
 # MODULOS
 @app.route("/modules")
+@login_required
 def modules():
     preexisting_modules = load_preexisting_modules()
     return render_template('modules.html', title='Módulos', modules=preexisting_modules)
 
 @app.route("/modules/upload", methods=['GET', 'POST'])
+@login_required
 def upload_module():
     if request.method == 'POST':
         image_file = request.files['image']
@@ -244,9 +247,89 @@ def upload_module():
     return redirect(url_for('modules'))
 
 @app.route("/modules/<module_name>")
+@login_required
 def module_detail(module_name):
     module = get_module_details(module_name)
     if module:
         return render_template('module_detail.html', title=module['title'], description=module['description'], module_name=module_name)
     else:
         return redirect(url_for('modules'))
+    
+
+# CHATBOT
+from langchain.chains import LLMChain
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain_groq import ChatGroq
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+
+
+@app.route('/chatbot', methods=['GET', 'POST'])
+def chatbot():
+    groq_api_key = os.getenv('GROQ_API_KEY')
+
+    if not groq_api_key:
+        return "API Key is not configured correctly."
+
+    # Configuración del modelo y longitud de la memoria conversacional
+    model = 'llama3-8b-8192'
+    conversational_memory_length = 10
+
+    # Prompt del sistema fijo
+    system_prompt = (
+        "Te llamas ADRIANA, una experta en el control del estrés y la ansiedad. "
+        "Tu conocimiento en psicología te permite ofrecer instrucciones precisas y efectivas para controlar estos problemas. "
+        "Además, cuentas con una variedad de ejercicios probados que ayudarán a disminuir el estrés y la ansiedad de manera rápida y efectiva. "
+        "Al dar consejos, sé cálida y empática, y recuerda mantener la cantidad de palabras por debajo de 120. "
+        "Cuando inicies una conversación no satures al usuario de preguntas."
+    )
+
+    if 'chat_history' not in session:
+        session['chat_history'] = []
+    
+
+    memory = ConversationBufferWindowMemory(k=conversational_memory_length, memory_key="chat_history", return_messages=True)
+
+    # Cargar el historial del chat desde la sesión en la memoria
+    for message in session['chat_history']:
+        print(session['chat_history'])
+        memory.save_context(
+            {'input': message['human']},
+            {'output': message['AI']}
+        )
+
+    groq_chat = ChatGroq(
+        groq_api_key=groq_api_key, 
+        model_name=model
+    )
+
+    # Construir la plantilla del prompt del chat con el historial de mensajes
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(content=system_prompt),
+            MessagesPlaceholder(variable_name="chat_history"),
+            HumanMessagePromptTemplate.from_template("{human_input}")
+        ]
+    )
+
+    if request.method == 'POST':
+        user_question = request.form.get('question')
+
+        conversation = LLMChain(
+            llm=groq_chat,
+            prompt=prompt,
+            verbose=True,
+            memory=memory,
+        )
+
+        response = conversation.predict(human_input=user_question)
+        session['chat_history'].append({'human': user_question, 'AI': response})
+        session.modified = True  # Asegurarse de que la sesión se guarde correctamente
+
+    return render_template('chatbot.html', chat_history=session['chat_history'])
+
+@app.route('/clear_chat', methods=['POST'])
+def clear_chat():
+    session.pop('chat_history', None)
+    flash("La conversación ha sido eliminada.", "info")
+    return redirect(url_for('chatbot'))

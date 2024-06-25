@@ -33,7 +33,7 @@
             <div class="navbar-nav mr-auto">
                 <a class="nav-item nav-link" href="{{ url_for('modules') }}">Módulos</a>
                 <a class="nav-item nav-link" href="{{ url_for('home') }}">Comunidad</a>
-                <a class="nav-item nav-link" href="{{ url_for('chatbot.chatbot') }}">Chatbot</a>
+                <a class="nav-item nav-link" href="{{ url_for('chatbot') }}">Chatbot</a>
                 <a class="nav-item nav-link" href="{{ url_for('about') }}">Nosotros</a>
             </div>
             <!-- Navbar Right Side -->
@@ -66,8 +66,11 @@
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
               {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                   {{ message }}
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
                 </div>
               {% endfor %}
             {% endif %}
@@ -89,7 +92,7 @@
                   <p>Comparte tus pensamientos y progreso personal.</p>
                 </li>
                 <li class="list-group-item list-group-item-light">
-                  <h5><a href="{{ url_for('chatbot.chatbot') }}" class="highlight-link"><strong>Chatbot</strong></a></h5>
+                  <h5><a href="{{ url_for('chatbot') }}" class="highlight-link"><strong>Chatbot</strong></a></h5>
                   <p>Recibe asistencia en tiempo real para gestionar el estrés.</p>
                 </li>
                 <li class="list-group-item list-group-item-light">

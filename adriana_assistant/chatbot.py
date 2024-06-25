@@ -17,44 +17,45 @@ def chatbot():
 
     # Configuración del modelo y longitud de la memoria conversacional
     model = 'llama3-8b-8192'
-    conversational_memory_length = 5
+    conversational_memory_length = 20
 
     # Prompt del sistema fijo
     system_prompt = (
-        "Eres una experto en el control del Estrés y la Ansiedad, te llamas ADRIANA. Dispones de todos los conocimientos de la Psicología "
-        "para poder dar instrucciones que ayuden a controlar estos problemas. Además, tienes conocimiento en ejercicios "
-        "que ayudarán a disminuir con mayor rapidez lo que ocasione el Estrés y la Ansiedad."
-        "Dale consejos cálidos al usuario, sé lo más empático posible."
-        "La cantidad de palabras no debe ser mayor a 30. Sé amable con los usuarios. Puedes usar emojis si es necesario."
+        "Te llamas ADRIANA, una experta en el control del estrés y la ansiedad. "
+        "Tu conocimiento en psicología te permite ofrecer instrucciones precisas y efectivas para controlar estos problemas. "
+        "Además, cuentas con una variedad de ejercicios probados que ayudarán a disminuir el estrés y la ansiedad de manera rápida y efectiva. "
+        "Al dar consejos, sé cálida y empática, y recuerda mantener la cantidad de palabras por debajo de 120. "
+        "Cuando inicies una conversación no satures al usuario de preguntas."
     )
 
     if 'chat_history' not in session:
         session['chat_history'] = []
 
+    memory = ConversationBufferWindowMemory(k=conversational_memory_length, memory_key="chat_history", return_messages=True)
+
+    # Cargar el historial del chat desde la sesión en la memoria
+    for message in session['chat_history']:
+        memory.save_context(
+            {'input': message['human']},
+            {'output': message['AI']}
+        )
+
+    groq_chat = ChatGroq(
+        groq_api_key=groq_api_key, 
+        model_name=model
+    )
+
+    # Construir la plantilla del prompt del chat con el historial de mensajes
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(content=system_prompt),
+            MessagesPlaceholder(variable_name="chat_history"),
+            HumanMessagePromptTemplate.from_template("{human_input}")
+        ]
+    )
+
     if request.method == 'POST':
         user_question = request.form.get('question')
-
-        memory = ConversationBufferWindowMemory(k=conversational_memory_length, memory_key="chat_history", return_messages=True)
-
-        # Obtener el historial del chat desde la sesión y cargarlo en la memoria
-        memory_context = []
-        for message in session['chat_history']:
-            memory_context.append(HumanMessage(content=message['human']))
-            memory_context.append(AIMessage(content=message['AI']))
-
-        groq_chat = ChatGroq(
-            groq_api_key=groq_api_key, 
-            model_name=model
-        )
-
-        # Construir la plantilla del prompt del chat con el historial de mensajes
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                SystemMessage(content=system_prompt),
-                *memory_context,
-                HumanMessagePromptTemplate.from_template("{human_input}")
-            ]
-        )
 
         conversation = LLMChain(
             llm=groq_chat,

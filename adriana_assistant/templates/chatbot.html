@@ -1,16 +1,19 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container mt-4">
-    <h1>Chatea con ADRIANA</h1>
+    <h1>Conversación con ADRIANA</h1>
     <form method="post" class="mb-3">
         <div class="form-group">
-            <label for="question">Haga una pregunta:</label>
-            <input type="text" class="form-control" id="question" name="question" placeholder="Escribe tu pregunta aquí..." required>
+            <label for="question">Tu asistente ADRIANA está aquí para ayudarte. Empieza una conversación ahora.</label>
+            <input type="text" class="form-control" id="question" name="question" placeholder="Cuéntame, ¿cómo te sientes?" required>
         </div>
-        <button type="submit" class="btn btn-primary mt-2">Enviar</button>
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-success me-2">Enviar</button>
+            <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearModal">Limpiar conversación</button>
+        </div>
     </form>
-    <div class="chat-history">
-        {% for message in chat_history %}
+    <div class="chat-history mt-4">
+        {% for message in chat_history|reverse %}
             <div class="card mb-2">
                 <div class="card-body">
                     <p><strong>Tú:</strong> {{ message['human'] }}</p>
@@ -18,6 +21,29 @@
                 </div>
             </div>
         {% endfor %}
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="clearModal" tabindex="-1" aria-labelledby="clearModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clearModalLabel">Confirmar eliminación</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar la conversación?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <form method="post" action="{{ url_for('clear_chat') }}">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock content %}
