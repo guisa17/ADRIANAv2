@@ -211,3 +211,21 @@ audio {
 .hidden {
   display: none;
 }
+
+.module-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.module-img {
+  height: 200px;
+  object-fit: cover;
+}
+
+.module-card .card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}

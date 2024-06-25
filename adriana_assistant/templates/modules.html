@@ -1,17 +1,24 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container mt-4">
-    <h1>Módulos</h1>
-    <p>Aquí puedes ver y cargar módulos para actividades de gestión del estrés.</p>
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Módulos</h1>
+        <a class="btn btn-primary btn-circle" href="#" data-toggle="modal" data-target="#uploadModal">
+            <i class="fa-solid fa-plus" style="color:white"></i>
+        </a>
+    </div>
+    <hr>
+    <p class="mb-4">Aquí puedes ver y cargar módulos para actividades de gestión del estrés y la ansiedad. Estos módulos contienen imágenes y audios que te ayudarán a aprender y practicar técnicas de relajación, meditación, entre otros.</p>
+    
     <div class="row">
         {% if modules %}
             {% for module in modules %}
             <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img src="{{ url_for('static', filename='modules_data/' ~ module['directory'] ~ '/image.jpg') }}" class="card-img-top" alt="{{ module['title'] }}">
+                <div class="card module-card">
+                    <img src="{{ url_for('static', filename='modules_data/' ~ module['directory'] ~ '/image.jpg') }}" class="card-img-top module-img" alt="{{ module['title'] }}">
                     <div class="card-body">
                         <h5 class="card-title">{{ module['title'] }}</h5>
-                        <p class="card-text">{{ module['description'][:100] }}...</p> <!-- Muestra una parte de la descripción -->
+                        <!-- <p class="card-text">{{ module['description'][:100] }}...</p> Muestra una parte de la descripción -->
                         <a href="{{ url_for('module_detail', module_name=module['directory']) }}" class="btn btn-primary">Ver más</a>
                     </div>
                 </div>
@@ -21,12 +28,28 @@
             <p>No hay módulos disponibles.</p>
         {% endif %}
     </div>
-    <form action="{{ url_for('upload_module') }}" method="post" enctype="multipart/form-data" class="mt-4">
-        <div class="form-group">
-            <label for="image">Cargar imagen para el módulo:</label>
-            <input type="file" class="form-control-file" id="image" name="image" required>
+</div>
+
+<!-- Modal para cargar nuevas imágenes -->
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">Cargar nueva imagen para el módulo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('upload_module') }}" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="image">Selecciona una imagen para el módulo:</label>
+                        <input type="file" class="form-control-file" id="image" name="image" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2">Cargar</button>
+                </form>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary mt-2">Cargar</button>
-    </form>
+    </div>
 </div>
 {% endblock content %}

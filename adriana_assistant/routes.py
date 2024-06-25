@@ -4,14 +4,116 @@ from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort, session
 from adriana_assistant import app, db, bcrypt, mail
 from adriana_assistant.forms import (RegistrationForm, LoginForm, UpdateAccountForm, UpdateProfilePictureForm,
-                             PostForm, RequestResetForm, ResetPasswordForm)
+                                     PostForm, RequestResetForm, ResetPasswordForm)
 from adriana_assistant.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
 from flask_mail import Message
-from .module_logic import process_module, load_preexisting_modules, get_module_details
+from transformers import pipeline
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
+from langchain.chains import LLMChain
+from langchain.chains.conversation.memory import ConversationBufferWindowMemory
+from langchain_groq import ChatGroq
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from dotenv import find_dotenv, load_dotenv
+import requests
 
+# Cargar las variables de entorno
+load_dotenv(find_dotenv())
 
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+HF_BEARER_API_TOKEN = os.getenv('HF_BEARER_API_TOKEN')
 
+# Helper Functions
+def img2text(image_path):
+    image_to_text = pipeline("image-to-text", model="Salesforce/blip-image-captioning-large")
+    text = image_to_text(image_path)[0]["generated_text"]
+    return text
+
+def generate_instructions(scenario):
+    model = "llama3-8b-8192"
+    template = '''
+    Eres una experta en técnicas de gestión del estrés y la ansiedad llamada ADRIANA. 
+    Puedes proporcionar instrucciones detalladas y claras sobre cómo realizar una actividad de gestión del estrés basada en una imagen. 
+    Las instrucciones deben estar en español;
+    CONTEXTO: {scenario}
+    INSTRUCCIONES:
+    '''
+    groq_chat = ChatGroq(
+        groq_api_key=GROQ_API_KEY, 
+        model_name=model
+    )
+    
+    prompt = PromptTemplate(template=template, input_variables=["scenario"])
+    instruction_llm = LLMChain(llm=groq_chat, prompt=prompt, verbose=True)
+
+    instructions = instruction_llm.predict(scenario=scenario)
+    return instructions
+
+def text2speech(message):
+    API_URL = "https://api-inference.huggingface.co/models/facebook/mms-tts-spa"
+    headers = {"Authorization": f"Bearer {HF_BEARER_API_TOKEN}"}
+    payload = {
+        "inputs": message
+    }
+    response = requests.post(API_URL, headers=headers, json=payload)
+    response.raise_for_status()
+
+    audio_path = os.path.join('static/uploads', 'audio-es.wav')
+    with open(audio_path, 'wb') as file:
+        file.write(response.content)
+
+    return audio_path
+
+def process_module(image_path):
+    scenario = img2text(image_path)
+    instructions = generate_instructions(scenario)
+    text2speech(instructions)
+    title = "Módulo de Gestión del Estrés"
+    return title, scenario, instructions
+
+def load_preexisting_modules():
+    modules_dir = os.path.join(app.root_path, 'static', 'modules_data')
+
+    if not os.path.exists(modules_dir):
+        print(f"Directorio {modules_dir} no encontrado.")
+        return []
+
+    modules = []
+    for module_name in os.listdir(modules_dir):
+        module_path = os.path.join(modules_dir, module_name)
+        if os.path.isdir(module_path):
+            description_path = os.path.join(module_path, 'description.txt')
+            image_path = os.path.join(module_path, 'image.jpg')
+            audio_path = os.path.join(module_path, 'audio.wav')
+            
+            if os.path.exists(description_path) and os.path.exists(image_path) and os.path.exists(audio_path):
+                with open(description_path, 'r', encoding='utf-8') as desc_file:
+                    description = desc_file.read()
+                module = {
+                    'directory': module_name,
+                    'title': module_name.replace('_', ' ').title(),
+                    'description': description
+                }
+                modules.append(module)
+            else:
+                print(f"Archivos faltantes en {module_path}: description.txt, image.jpg o audio.wav")
+    return modules
+
+def get_module_details(module_name):
+    modules_dir = os.path.join(app.root_path, 'static', 'modules_data')
+    module_path = os.path.join(modules_dir, module_name)
+    if os.path.isdir(module_path):
+        description_path = os.path.join(module_path, 'description.txt')
+        if os.path.exists(description_path):
+            with open(description_path, 'r', encoding='utf-8') as desc_file:
+                description = desc_file.read()
+            return {
+                'title': module_name.replace('_', ' ').title(),
+                'description': description
+            }
+    return None
+
+# Routes
 @app.route("/")
 @app.route("/home")
 def home():
@@ -20,11 +122,9 @@ def home():
     latest_posts = Post.query.order_by(Post.date_posted.desc()).limit(5).all()
     return render_template('home.html', posts=posts, latest_posts=latest_posts)
 
-
 @app.route("/about")
 def about():
     return render_template('about.html', title='About')
-
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -39,7 +139,6 @@ def register():
         flash('Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
-
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -56,12 +155,10 @@ def login():
             flash('Inicio de sesión sin éxito. Por favor revisa tu email y contraseña.', 'danger')
     return render_template('login.html', title='Login', form=form)
 
-
 @app.route("/logout")
 def logout():
     logout_user()
     return redirect(url_for('home'))
-
 
 def save_picture(form_picture):
     random_hex = secrets.token_hex(8)
@@ -75,7 +172,6 @@ def save_picture(form_picture):
     i.save(picture_path)
 
     return picture_fn
-
 
 @app.route("/account", methods=['GET', 'POST'])
 @login_required
@@ -98,8 +194,7 @@ def account():
         form.username.data = current_user.username
         form.email.data = current_user.email
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
-    return render_template('account.html', title='Account',
-                           image_file=image_file, form=form, picture_form=picture_form)
+    return render_template('account.html', title='Account', image_file=image_file, form=form, picture_form=picture_form)
 
 @app.route("/remove_picture", methods=['POST'])
 @login_required
@@ -108,7 +203,6 @@ def remove_picture():
     db.session.commit()
     flash('Tu foto de perfil ha sido eliminada.', 'success')
     return redirect(url_for('account'))
-
 
 @app.route("/post/new", methods=['GET', 'POST'])
 @login_required
@@ -120,15 +214,12 @@ def new_post():
         db.session.commit()
         flash('Tu publicación se ha realizado con éxito.', 'success')
         return redirect(url_for('home'))
-    return render_template('create_post.html', title='Nueva publicación',
-                           form=form, legend='Crea una nueva publicación')
-
+    return render_template('create_post.html', title='Nueva publicación', form=form, legend='Crea una nueva publicación')
 
 @app.route("/post/<int:post_id>")
 def post(post_id):
     post = Post.query.get_or_404(post_id)
     return render_template('post.html', title=post.title, post=post)
-
 
 @app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
 @login_required
@@ -146,9 +237,7 @@ def update_post(post_id):
     elif request.method == 'GET':
         form.title.data = post.title
         form.content.data = post.content
-    return render_template('create_post.html', title='Update Post',
-                           form=form, legend='Update Post')
-
+    return render_template('create_post.html', title='Update Post', form=form, legend='Update Post')
 
 @app.route("/post/<int:post_id>/delete", methods=['POST'])
 @login_required
@@ -161,29 +250,22 @@ def delete_post(post_id):
     flash('Tu publicación ha sido eliminada.', 'success')
     return redirect(url_for('home'))
 
-
 @app.route("/user/<string:username>")
 def user_posts(username):
     page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
-    posts = Post.query.filter_by(author=user)\
-        .order_by(Post.date_posted.desc())\
-        .paginate(page=page, per_page=5)
+    posts = Post.query.filter_by(author=user).order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
     return render_template('user_posts.html', posts=posts, user=user)
-
 
 def send_reset_email(user):
     token = user.get_reset_token()
-    msg = Message('Password Reset Request',
-                  sender='noreply@demo.com',
-                  recipients=[user.email])
+    msg = Message('Password Reset Request', sender='noreply@demo.com', recipients=[user.email])
     msg.body = f'''To reset your password, visit the following link:
 {url_for('reset_token', token=token, _external=True)}
 
 If you did not make this request then simply ignore this email and no changes will be made.
 '''
     mail.send(msg)
-
 
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
@@ -196,7 +278,6 @@ def reset_request():
         flash('An email has been sent with instructions to reset your password.', 'info')
         return redirect(url_for('login'))
     return render_template('reset_request.html', title='Reset Password', form=form)
-
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
@@ -215,8 +296,7 @@ def reset_token(token):
         return redirect(url_for('login'))
     return render_template('reset_token.html', title='Reset Password', form=form)
 
-
-# MODULOS
+# Modules
 @app.route("/modules")
 @login_required
 def modules():
@@ -229,16 +309,13 @@ def upload_module():
     if request.method == 'POST':
         image_file = request.files['image']
         if image_file:
-            # Directorio donde se guardarán las imágenes subidas
             upload_folder = os.path.join(app.root_path, 'static/uploads')
             if not os.path.exists(upload_folder):
                 os.makedirs(upload_folder)
             
-            # Guardar la imagen en la carpeta temporal
             image_path = os.path.join(upload_folder, image_file.filename)
             image_file.save(image_path)
 
-            # Procesar la imagen para obtener la descripción y el audio
             title, scenario, instructions = process_module(image_path)
             audio_path = os.path.join(upload_folder, 'audio-es.wav')
 
@@ -254,16 +331,8 @@ def module_detail(module_name):
         return render_template('module_detail.html', title=module['title'], description=module['description'], module_name=module_name)
     else:
         return redirect(url_for('modules'))
-    
 
-# CHATBOT
-from langchain.chains import LLMChain
-from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain_groq import ChatGroq
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-
-
+# Chatbot
 @app.route('/chatbot', methods=['GET', 'POST'])
 def chatbot():
     groq_api_key = os.getenv('GROQ_API_KEY')
@@ -271,11 +340,9 @@ def chatbot():
     if not groq_api_key:
         return "API Key is not configured correctly."
 
-    # Configuración del modelo y longitud de la memoria conversacional
     model = 'llama3-8b-8192'
     conversational_memory_length = 10
 
-    # Prompt del sistema fijo
     system_prompt = (
         "Te llamas ADRIANA, una experta en el control del estrés y la ansiedad. "
         "Tu conocimiento en psicología te permite ofrecer instrucciones precisas y efectivas para controlar estos problemas. "
@@ -286,13 +353,10 @@ def chatbot():
 
     if 'chat_history' not in session:
         session['chat_history'] = []
-    
 
     memory = ConversationBufferWindowMemory(k=conversational_memory_length, memory_key="chat_history", return_messages=True)
 
-    # Cargar el historial del chat desde la sesión en la memoria
     for message in session['chat_history']:
-        print(session['chat_history'])
         memory.save_context(
             {'input': message['human']},
             {'output': message['AI']}
@@ -303,7 +367,6 @@ def chatbot():
         model_name=model
     )
 
-    # Construir la plantilla del prompt del chat con el historial de mensajes
     prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessage(content=system_prompt),
