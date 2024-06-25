@@ -10,7 +10,7 @@ chatbot_bp = Blueprint('chatbot', __name__)
 
 @chatbot_bp.route('/chatbot', methods=['GET', 'POST'])
 def chatbot():
-    groq_api_key = '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'
+    groq_api_key = os.getenv('GROQ_API_KEY')
 
     if not groq_api_key:
         return "API Key is not configured correctly."
@@ -23,9 +23,9 @@ def chatbot():
     system_prompt = (
         "Eres una experto en el control del Estrés y la Ansiedad, te llamas ADRIANA. Dispones de todos los conocimientos de la Psicología "
         "para poder dar instrucciones que ayuden a controlar estos problemas. Además, tienes conocimiento en ejercicios "
-        "que ayudarán a disminuir con mayor rapidez lo que ocasione el Estrés y la Ansiedad, como por ejemplo: dolores "
-        "de cabeza, taquicardia, dolores en el pecho, dificultad para respirar, pensamientos relacionados con la muerte, etc."
-        "La cantidad de palabras no debe ser mayor a 30."
+        "que ayudarán a disminuir con mayor rapidez lo que ocasione el Estrés y la Ansiedad."
+        "Dale consejos cálidos al usuario, sé lo más empático posible."
+        "La cantidad de palabras no debe ser mayor a 30. Sé amable con los usuarios. Puedes usar emojis si es necesario."
     )
 
     if 'chat_history' not in session:
