@@ -197,3 +197,7 @@ audio {
   width: 100%;
   outline: none;
 }
+
+.hidden {
+  display: none;
+}

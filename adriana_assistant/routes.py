@@ -3,7 +3,7 @@ import secrets
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, abort
 from adriana_assistant import app, db, bcrypt, mail
-from adriana_assistant.forms import (RegistrationForm, LoginForm, UpdateAccountForm,
+from adriana_assistant.forms import (RegistrationForm, LoginForm, UpdateAccountForm, UpdateProfilePictureForm,
                              PostForm, RequestResetForm, ResetPasswordForm)
 from adriana_assistant.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
@@ -75,34 +75,38 @@ def save_picture(form_picture):
 
     return picture_fn
 
-@app.route("/remove_picture", methods=['POST'])
-@login_required
-def remove_picture():
-    current_user.image_file = 'default.jpg'
-    db.session.commit()
-    flash('Tu foto de perfil ha sido restablecida a la predeterminada.', 'info')
-    return redirect(url_for('account'))
-    
 
 @app.route("/account", methods=['GET', 'POST'])
 @login_required
 def account():
     form = UpdateAccountForm()
-    if form.validate_on_submit():
-        if form.picture.data:
-            picture_file = save_picture(form.picture.data)
-            current_user.image_file = picture_file
+    picture_form = UpdateProfilePictureForm()
+    if form.validate_on_submit() and picture_form.picture.data is None:
         current_user.username = form.username.data
         current_user.email = form.email.data
         db.session.commit()
-        flash('Your account has been updated!', 'success')
+        flash('Los datos de tu cuenta han sido actualizados.', 'success')
+        return redirect(url_for('account'))
+    if picture_form.validate_on_submit() and picture_form.picture.data:
+        picture_file = save_picture(picture_form.picture.data)
+        current_user.image_file = picture_file
+        db.session.commit()
+        flash('Tu foto de perfil ha sido actualizada.', 'success')
         return redirect(url_for('account'))
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
     return render_template('account.html', title='Account',
-                           image_file=image_file, form=form)
+                           image_file=image_file, form=form, picture_form=picture_form)
+
+@app.route("/remove_picture", methods=['POST'])
+@login_required
+def remove_picture():
+    current_user.image_file = 'default.jpg'
+    db.session.commit()
+    flash('Tu foto de perfil ha sido eliminada.', 'success')
+    return redirect(url_for('account'))
 
 
 @app.route("/post/new", methods=['GET', 'POST'])
