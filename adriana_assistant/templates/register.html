@@ -4,59 +4,56 @@
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Join Today</legend>
+                <legend class="border-bottom mb-4">Regístrate</legend>
                 <div class="form-group">
-                    {{ form.username.label(class="form-control-label") }}
-
                     {% if form.username.errors %}
-                        {{ form.username(class="form-control form-control-lg is-invalid") }}
+                        {{ form.username(class="form-control form-control-lg is-invalid custom-placeholder", placeholder=form.username.label.text) }}
                         <div class="invalid-feedback">
                             {% for error in form.username.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.username(class="form-control form-control-lg") }}
+                        {{ form.username(class="form-control form-control-lg custom-placeholder", placeholder=form.username.label.text) }}
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.email.label(class="form-control-label") }}
                     {% if form.email.errors %}
-                        {{ form.email(class="form-control form-control-lg is-invalid") }}
+                        {{ form.email(class="form-control form-control-lg is-invalid custom-placeholder", placeholder=form.email.label.text) }}
                         <div class="invalid-feedback">
                             {% for error in form.email.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.email(class="form-control form-control-lg") }}
+                        {{ form.email(class="form-control form-control-lg custom-placeholder", placeholder=form.email.label.text) }}
                     {% endif %}
                 </div>
-                <div class="form-group">
-                    {{ form.password.label(class="form-control-label") }}
+                <div class="form-group position-relative">
                     {% if form.password.errors %}
-                        {{ form.password(class="form-control form-control-lg is-invalid") }}
+                        {{ form.password(class="form-control form-control-lg is-invalid custom-placeholder", placeholder=form.password.label.text, id="passwordField") }}
                         <div class="invalid-feedback">
                             {% for error in form.password.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.password(class="form-control form-control-lg") }}
+                        {{ form.password(class="form-control form-control-lg custom-placeholder", placeholder=form.password.label.text, id="passwordField") }}
                     {% endif %}
+                    <span toggle="#passwordField" class="fa fa-fw fa-eye field-icon toggle-password" onclick="togglePassword('passwordField', this)"></span>
                 </div>
-                <div class="form-group">
-                    {{ form.confirm_password.label(class="form-control-label") }}
+                <div class="form-group position-relative">
                     {% if form.confirm_password.errors %}
-                        {{ form.confirm_password(class="form-control form-control-lg is-invalid") }}
+                        {{ form.confirm_password(class="form-control form-control-lg is-invalid custom-placeholder", placeholder=form.confirm_password.label.text, id="confirmPasswordField") }}
                         <div class="invalid-feedback">
                             {% for error in form.confirm_password.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.confirm_password(class="form-control form-control-lg") }}
+                        {{ form.confirm_password(class="form-control form-control-lg custom-placeholder", placeholder=form.confirm_password.label.text, id="confirmPasswordField") }}
                     {% endif %}
+                    <span toggle="#confirmPasswordField" class="fa fa-fw fa-eye field-icon toggle-password" onclick="togglePassword('confirmPasswordField', this)"></span>
                 </div>
             </fieldset>
             <div class="form-group">
@@ -66,7 +63,37 @@
     </div>
     <div class="border-top pt-3">
         <small class="text-muted">
-            Already Have An Account? <a class="ml-2" href="{{ url_for('login') }}">Sign In</a>
+            ¿Ya tienes una cuenta? <a class="ml-2" href="{{ url_for('login') }}">Iniciar sesión</a>
         </small>
     </div>
+
+    <style>
+        .field-icon {
+            float: right;
+            margin-right: 10px;
+            margin-top: -30px;
+            position: relative;
+            z-index: 2;
+            cursor: pointer;
+        }
+        .custom-placeholder::placeholder {
+            font-size: 0.875em;
+            color: #6c757d;
+        }
+    </style>
+
+    <script>
+        function togglePassword(fieldId, icon) {
+            var field = document.getElementById(fieldId);
+            if (field.type === "password") {
+                field.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 {% endblock content %}

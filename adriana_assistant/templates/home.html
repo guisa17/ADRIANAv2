@@ -1,11 +1,15 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container mt-4">
-    <h1>Comunidad</h1>
+    <div class="d-flex justify-content-between align-items-center">
+        <h1>Comunidad</h1>
+        <a class="btn btn-primary btn-circle" href="{{ url_for('new_post') }}"><i class="fa-solid fa-plus" style="color:white"></i></a>
+    </div>
     <hr>
-    <p>Bienvenido a la sección de comunidad. Comparte tus pensamientos y progreso personal, interactúa con otros usuarios, y apóyate mutuamente en la gestión del estrés y la ansiedad.</p>
-    <a class="btn btn-primary my-2" href="{{ url_for('new_post') }}">Nueva Publicación</a>
-    
+    {% if posts.page == 1 %}
+    <p class="mb-4">Bienvenido a la sección de comunidad. Comparte tus pensamientos y progreso personal, interactúa con otros usuarios, y apóyate mutuamente en la gestión del estrés y la ansiedad.</p>
+    {% endif %}
+
     {% for post in posts.items %}
         <article class="media content-section">
           <img class="rounded-circle article-img" src="{{ url_for('static', filename='profile_pics/' + post.author.image_file) }}">

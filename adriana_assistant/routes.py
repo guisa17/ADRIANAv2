@@ -117,10 +117,10 @@ def new_post():
         post = Post(title=form.title.data, content=form.content.data, author=current_user)
         db.session.add(post)
         db.session.commit()
-        flash('Your post has been created!', 'success')
+        flash('Tu publicación se ha realizado con éxito.', 'success')
         return redirect(url_for('home'))
-    return render_template('create_post.html', title='New Post',
-                           form=form, legend='New Post')
+    return render_template('create_post.html', title='Nueva publicación',
+                           form=form, legend='Crea una nueva publicación')
 
 
 @app.route("/post/<int:post_id>")
