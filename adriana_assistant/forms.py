@@ -62,7 +62,7 @@ class UpdateProfilePictureForm(FlaskForm):
 
 class PostForm(FlaskForm):
     title = StringField('Título', validators=[DataRequired()])
-    content = TextAreaField('Contenido', validators=[DataRequired()])
+    content = TextAreaField('Cuéntanos alguna experiencia personal', validators=[DataRequired()])
     submit = SubmitField('Postear')
 
 
