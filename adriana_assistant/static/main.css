@@ -36,7 +36,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-right: 10px; /* Ajusta este valor según la separación deseada */
 }
 
-
 /* Dropdown Menu */
 .navbar-nav .dropdown-menu {
   background-color: #BECCFF; /* Fondo Azul Pastel */
@@ -71,22 +70,22 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Sidebar Titles */
 .content-section h3 {
-  color: #559e83; /* Verde del logo */
+  color: #409b43; /* Verde del logo */
 }
 
 /* Sidebar Links */
 .content-section .list-group-item-light a {
-  color: #559e83; /* Verde del logo */
+  color: #409b43; /* Verde del logo */
   text-decoration: none;
 }
 .content-section .list-group-item-light a:hover, .content-section .list-group-item-light a:focus {
-  color: #388E3C; /* Verde más oscuro */
+  color: #409b43; /* Verde más oscuro */
   text-decoration: underline;
 }
 
 /* Highlight Links */
 .explore-features a.highlight-link {
-  color: #559e83; /* Verde del logo */
+  color: #409b43; /* Verde del logo */
   font-weight: 600;
   text-decoration: none;
 }
@@ -97,7 +96,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Articles */
 .article-title {
-  color: #559e83; /* Verde del logo */
+  color: #409b43; /* Verde del logo */
   font-weight: 600;
 }
 a.article-title:hover {
@@ -161,7 +160,7 @@ a.article-title:hover {
   padding: 20px;
 }
 .card-title {
-  color: #559e83; /* Verde del logo */
+  color: #409b43; /* Verde del logo */
   font-weight: 600;
 }
 .card-text {
@@ -170,13 +169,24 @@ a.article-title:hover {
 
 /* Buttons */
 .btn-primary {
-  background-color: #559e83; /* Verde del logo */
-  border-color: #559e83;
+  background-color: #409b43; /* Verde del logo */
+  border-color: #409b43;
   color: #fff;
 }
 .btn-primary:hover {
   background-color: #388E3C; /* Verde más oscuro */
   border-color: #388E3C;
+}
+.btn-circle {
+  width: 50px;
+  height: 50px;
+  padding: 10px;
+  border-radius: 50%;
+  font-size: 24px;
+  line-height: 1.33;
+  text-align: center;
+  vertical-align: middle;
+  display: inline-block;
 }
 
 /* Forms */
@@ -200,16 +210,4 @@ audio {
 
 .hidden {
   display: none;
-}
-
-.btn-circle {
-  width: 50px;
-  height: 50px;
-  padding: 10px;
-  border-radius: 50%;
-  font-size: 24px;
-  line-height: 1.33;
-  text-align: center;
-  vertical-align: middle;
-  display: inline-block;
 }
