@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    {% if title %}
+        <title>ADRIANA - {{ title }}</title>
+        <link rel="icon" href="{{ url_for('static', filename='logo.png') }}">
+    {% else %}
+        <title>ADRIANA</title>
+        <link rel="icon" href="{{ url_for('static', filename='logo.png') }}">
+    {% endif %}
+</head>
+<body>
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <a class="logo-nav navbar-brand mr-4" href="/">
+            <img src="{{ url_for('static', filename='logo.png') }}" width="25" height="25" class="d-inline-block align-top" alt="Logo ADRIANA">
+            <strong>ADRIANA</strong>
+          </a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+                <a class="nav-item nav-link" href="{{ url_for('modules') }}">Módulos</a>
+                <a class="nav-item nav-link" href="{{ url_for('home') }}">Comunidad</a>
+                <a class="nav-item nav-link" href="{{ url_for('chatbot.chatbot') }}">Chatbot</a>
+                <a class="nav-item nav-link" href="{{ url_for('about') }}">Nosotros</a>
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              {% if current_user.is_authenticated %}
+                <div class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <img src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}" width="35" height="35" class="profile-img rounded-circle">
+                    <strong>{{ current_user.username }}</strong>
+                  </a>
+                  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{{ url_for('account') }}">Mi Perfil</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">Cerrar Sesion</a>
+                  </div>
+                </div>
+              {% else %}
+                <a class="nav-item nav-link" href="{{ url_for('login') }}">Iniciar Sesion</a>
+                <a class="nav-item nav-link" href="{{ url_for('register') }}">Registrar</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <main role="main" class="container">
+      <div class="row">
+        <div class="col-md-8">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+          {% block content %}{% endblock %}
+        </div>
+        <div class="col-md-4">
+          <div class="content-section">
+            <h3><strong>Recursos de ADRIANA</strong></h3>
+            <p class='text-muted'>Explora las principales características de nuestra plataforma:</p>
+            <ul class="list-group">
+                <li class="list-group-item list-group-item-light">
+                  <h5><a href="{{ url_for('modules') }}" class="highlight-link"><strong>Módulos</strong></a></h5>
+                  <p>Accede a ejercicios y técnicas de relajación.</p>
+                </li>
+                <li class="list-group-item list-group-item-light">
+                  <h5><a href="{{ url_for('home') }}" class="highlight-link"><strong>Comunidad</strong></a></h5>
+                  <p>Comparte tus pensamientos y progreso personal.</p>
+                </li>
+                <li class="list-group-item list-group-item-light">
+                  <h5><a href="{{ url_for('chatbot.chatbot') }}" class="highlight-link"><strong>Chatbot</strong></a></h5>
+                  <p>Recibe asistencia en tiempo real para gestionar el estrés.</p>
+                </li>
+                <li class="list-group-item list-group-item-light">
+                  <h5><a href="{{ url_for('about') }}" class="highlight-link"><strong>Sobre ADRIANA</strong></a></h5>
+                  <p>Conoce más sobre nuestra plataforma y cómo funciona.</p>
+                </li>
+                <li class="list-group-item list-group-item-light">
+                  <h5><a href="https://creator.voiceflow.com/prototype/664e59dbd188ab83e9a86d25" class="highlight-link" target="_blank"><strong>Sugerencias de Voiceflow</strong></a></h5>
+                  <p>Proporciona tus sugerencias y retroalimentación a través de Voiceflow.</p>
+                </li>
+            </ul>
+          </div>
+          <div class="content-section mt-3">
+            <h3><strong>Últimas Publicaciones</strong></h3>
+            {% for post in latest_posts %}
+                <div class="list-group">
+                    <a href="{{ url_for('post', post_id=post.id) }}" class="list-group-item list-group-item-action">
+                        <h5 class="mb-1">{{ post.title }}</h5>
+                        <small>por {{ post.author.username }} el {{ post.date_posted.strftime('%d %B %Y') }}</small>
+                    </a>
+                </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>

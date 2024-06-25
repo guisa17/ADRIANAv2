@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Chatea con ADRIANA</h1>
+    <form method="post" class="mb-3">
+        <div class="form-group">
+            <label for="question">Haga una pregunta:</label>
+            <input type="text" class="form-control" id="question" name="question" placeholder="Escribe tu pregunta aquí..." required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Enviar</button>
+    </form>
+    <div class="chat-history">
+        {% for message in chat_history %}
+            <div class="card mb-2">
+                <div class="card-body">
+                    <p><strong>Tú:</strong> {{ message['human'] }}</p>
+                    <p><strong>ADRIANA:</strong> {{ message['AI'] }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

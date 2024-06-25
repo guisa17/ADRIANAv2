@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ title }}</h1>
+    <img src="{{ url_for('static', filename='modules_data/' ~ module_name ~ '/image.jpg') }}" class="img-fluid" alt="{{ title }}">
+    <div class="mt-3">
+        <h3>Descripción de la imagen</h3>
+        <p>{{ description }}</p>
+    </div>
+    <div class="mt-3">
+        <h3>Audio</h3>
+        <audio controls>
+            <source src="{{ url_for('static', filename='modules_data/' ~ module_name ~ '/audio.wav') }}" type="audio/wav">
+            Tu navegador no soporta el elemento de audio.
+        </audio>
+    </div>
+</div>
+{% endblock content %}

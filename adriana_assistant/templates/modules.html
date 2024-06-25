@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Módulos</h1>
+    <p>Aquí puedes ver y cargar módulos para actividades de gestión del estrés.</p>
+    <div class="row">
+        {% if modules %}
+            {% for module in modules %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{{ url_for('static', filename='modules_data/' ~ module['directory'] ~ '/image.jpg') }}" class="card-img-top" alt="{{ module['title'] }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ module['title'] }}</h5>
+                        <p class="card-text">{{ module['description'][:100] }}...</p> <!-- Muestra una parte de la descripción -->
+                        <a href="{{ url_for('module_detail', module_name=module['directory']) }}" class="btn btn-primary">Ver más</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No hay módulos disponibles.</p>
+        {% endif %}
+    </div>
+    <form action="{{ url_for('upload_module') }}" method="post" enctype="multipart/form-data" class="mt-4">
+        <div class="form-group">
+            <label for="image">Cargar imagen para el módulo:</label>
+            <input type="file" class="form-control-file" id="image" name="image" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Cargar</button>
+    </form>
+</div>
+{% endblock content %}
