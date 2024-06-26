@@ -229,3 +229,25 @@ audio {
   flex-direction: column;
   justify-content: space-between;
 }
+
+
+/* Custom Pagination Styles - Purple */
+.custom-pagination-purple .page-link {
+  color: #001c81; /* Morado */
+  border-color: #beccff; /* Morado */
+}
+
+.custom-pagination-purple .page-link:hover {
+  background-color: #001c81; /* Morado */
+  color: white;
+}
+
+.custom-pagination-purple .page-item.active .page-link {
+  background-color: #001c81; /* Morado */
+  border-color: #001c81; /* Morado */
+  color: white;
+}
+
+.custom-pagination-purple .page-item.disabled .page-link {
+  color: #ccc; /* Gris para el estado deshabilitado */
+}

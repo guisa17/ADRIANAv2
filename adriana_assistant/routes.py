@@ -114,17 +114,18 @@ def get_module_details(module_name):
     return None
 
 # Routes
-@app.route("/")
 @app.route("/home")
+@login_required
 def home():
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
     latest_posts = Post.query.order_by(Post.date_posted.desc()).limit(5).all()
     return render_template('home.html', posts=posts, latest_posts=latest_posts)
 
+@app.route("/")
 @app.route("/about")
 def about():
-    return render_template('about.html', title='About')
+    return render_template('about.html', title='Nosotros')
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -138,7 +139,7 @@ def register():
         db.session.commit()
         flash('Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión.', 'success')
         return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+    return render_template('register.html', title='Registro', form=form)
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -153,7 +154,7 @@ def login():
             return redirect(next_page) if next_page else redirect(url_for('home'))
         else:
             flash('Inicio de sesión sin éxito. Por favor revisa tu email y contraseña.', 'danger')
-    return render_template('login.html', title='Login', form=form)
+    return render_template('login.html', title='Iniciar sesión', form=form)
 
 @app.route("/logout")
 def logout():
@@ -194,7 +195,7 @@ def account():
         form.username.data = current_user.username
         form.email.data = current_user.email
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
-    return render_template('account.html', title='Account', image_file=image_file, form=form, picture_form=picture_form)
+    return render_template('account.html', title='Mi Cuenta', image_file=image_file, form=form, picture_form=picture_form)
 
 @app.route("/remove_picture", methods=['POST'])
 @login_required
@@ -237,7 +238,7 @@ def update_post(post_id):
     elif request.method == 'GET':
         form.title.data = post.title
         form.content.data = post.content
-    return render_template('create_post.html', title='Update Post', form=form, legend='Update Post')
+    return render_template('create_post.html', title='Actualizar post', form=form, legend='Update Post')
 
 @app.route("/post/<int:post_id>/delete", methods=['POST'])
 @login_required
@@ -277,7 +278,7 @@ def reset_request():
         send_reset_email(user)
         flash('An email has been sent with instructions to reset your password.', 'info')
         return redirect(url_for('login'))
-    return render_template('reset_request.html', title='Reset Password', form=form)
+    return render_template('reset_request.html', title='Reestablecer contraseña', form=form)
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
@@ -294,7 +295,7 @@ def reset_token(token):
         db.session.commit()
         flash('Your password has been updated! You are now able to log in', 'success')
         return redirect(url_for('login'))
-    return render_template('reset_token.html', title='Reset Password', form=form)
+    return render_template('reset_token.html', title='Reestablecer contraseña', form=form)
 
 # Modules
 @app.route("/modules")
@@ -334,6 +335,7 @@ def module_detail(module_name):
 
 # Chatbot
 @app.route('/chatbot', methods=['GET', 'POST'])
+@login_required
 def chatbot():
     groq_api_key = os.getenv('GROQ_API_KEY')
 
