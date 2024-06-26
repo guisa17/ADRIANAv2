@@ -1,5 +1,5 @@
 from datetime import datetime
-from itsdangerous import TimedJSONWebSignatureSerializer  as Serializer
+from itsdangerous import TimedSerializer as Serializer
 from adriana_assistant import db, login_manager, app
 from flask_login import UserMixin
 
@@ -40,6 +40,7 @@ class Post(db.Model):
     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     content = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    # likes = db.Column(db.Integer, default=0)  # Nuevo campo para el conteo de "me gustas"
 
     def __repr__(self):
         return f"Post('{self.title}', '{self.date_posted}')"
