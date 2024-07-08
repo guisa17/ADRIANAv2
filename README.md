@@ -80,3 +80,6 @@ Sigue estos pasos para configurar y ejecutar el proyecto de ADRIANA en tu máqui
     ```
 
     La aplicación estará disponible en `http://127.0.0.1:5000`.
+
+### Nota
+Es posible visualizar el deployment de la aplicación en el siguiente enlace https://adrianav4.pythonanywhere.com/.
