@@ -24,7 +24,7 @@ Sigue estos pasos para configurar y ejecutar el proyecto de ADRIANA en tu máqui
 1. **Clonar el repositorio**
 
    ```bash
-   git clone https://github.com/tu-usuario/ADRIANA.git
+   git clone https://github.com/guisa17/ADRIANAv2.git
    cd ADRIANA
    ```
 
